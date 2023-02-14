@@ -1,0 +1,115 @@
+#+OPTIONS: ^:nil
+#+TITLE: Simple scripts to QUBOs on Dwave
+#+AUTHOR: Mátyás Koniorczyk, [[https://wigner.hu/en][Wigner RCP Budapest]]
+
+Version: 0.1 beta
+Dated: 2023-02-09
+
+This is a set of simple utilities to submit problems to DWave via the
+Ocean toolkit and analyze the results. The scripts come with no
+warranty, use them at your own risk. I'm grateful for pointing out any
+issues.
+
+* Requirements
+**  Environment, token
+
+Set the environment variable ~DWAVETOKEN~ to your DWave token.
+
+In the examples we also use glpk and jq.
+
+**  Python requirements
+
+Install with ~requirements.txt~; best done into a Python venv.
+
+* Solving problems
+** Input format
+
+The input is a QUBO csv file, sparse format, with the header
+#+BEGIN_EXAMPLE
+ICOORD,JCOORD,QVALUE
+#+END_EXAMPLE
+just like in the case of the glpk standard linearization solver.  It
+should be symmetric or upper triangular.  The sense of optimizatin is
+minimization, which is not specified in the file.
+
+See the supplied ~qubo.csv~ example.
+
+It can be solved with ~glpk~:
+#+BEGIN_SRC bash
+glpsol -m qubo.mod -o qubo.sol
+#+END_SRC
+
+The ~qubo.sol~ holds the classical solution.  
+
+(The ~qubo.mod~ implements the standard linearization of the QUBO,
+c.f. Fortêt, R., Revue Française de Recherche Opérationelle 4,
+pp. 17-26. (1960). It has been [[https://lists.gnu.org/archive/html/help-glpk/2022-01/msg00000.html][created by me and P. Naszvadi]] to be
+included in the examples of the ~glpk~ distribution.)
+
+** Solving on DWave
+
+- Dry run, just echo Q ::
+#+BEGIN_SRC bash
+./solve_QUBO_DWave.py --dry qubo.csv
+#+END_SRC
+- Actually solve ::
+*Important*: run int in a ~screen~. It will wait for the process to
+ complete. Mostly it runs almost after submitting; DWave may not be
+ busy, but it also may take more time.
+#+BEGIN_SRC bash
+./solve_QUBO_DWave.py --outfile qubo.dwavepickle qubo.csv
+#+END_SRC
+The solution to ~qubo.csv~ will be pickled into ~qubo.dwavepickle~
+with all its data.
+
+- Further options ::
+#+BEGIN_SRC bash
+./solve_QUBO_DWave.py --help
+#+END_SRC
+** Hybrid solver
+#+BEGIN_SRC bash
+./solve_QUBO_HybridBQM.py --help
+#+END_SRC
+** Displaying / saving the sample to csv
+
+- To stdout :: 
+#+BEGIN_SRC bash
+./dwave_solution_to_csv.py qubo.dwavepickle
+#+END_SRC
+
+- To a file ::
+(output to ~qubo_dwavesol.csv~)
+#+BEGIN_SRC bash
+./dwave_solution_to_csv.py -o qubo_dwavesol.csv qubo.dwavepickle
+#+END_SRC
+
+- Further options ::
+#+BEGIN_SRC bash
+./dwave_solution_to_csv.py --help
+#+END_SRC
+
+** Display all details of the DWave run
+
+#+BEGIN_SRC bash
+./catpickle_json.py qubo.dwavepickle | jq
+#+END_SRC
+
+** p-value estimation
+From 
+#+BEGIN_QUOTE
+  Statistical quality assessment of Ising-based annealer outputs
+  by K Domino, M Koniorczyk, Z Puchała
+ Quantum Information Processing 21 (8), 1-19
+ https://link.springer.com/article/10.1007/s11128-022-03623-5
+#+END_QUOTE
+The input should be a csv with "energies" and "num_occurrences"
+columns, starting like ~qubo_dwavesol.csv~ as an example, or a pickled
+version of ~dwave.system.composites.embedded_sampler~'s ~sample_qubo~
+output, after making it serializable with its ~to_serializable~
+method.
+
+Run like this to get the p-value:
+#+BEGIN_SRC bash
+./pvalue.py qubo_dwavesol.csv
+#+END_SRC
+Use the ~--help~ option to see the options.
