@@ -2,10 +2,10 @@
 #+TITLE: Simple scripts to QUBOs on Dwave
 #+AUTHOR: Mátyás Koniorczyk, [[https://wigner.hu/en][Wigner RCP Budapest]]
 
-Version: 0.1 beta
-Dated: 2023-02-09
+Version: 0.1 beta, update 1
+Dated: 2024-05-02
 
-This is a set of simple utilities to submit problems to DWave via the
+This is a set of simple utilities to submit problems to D-Wave via the
 Ocean toolkit and analyze the results. The scripts come with no
 warranty, use them at your own risk. I'm grateful for pointing out any
 issues.
@@ -13,7 +13,7 @@ issues.
 * Requirements
 **  Environment, token
 
-Set the environment variable ~DWAVETOKEN~ to your DWave token.
+Set the environment variable ~DWAVETOKEN~ to your D-Wave token.
 
 In the examples we also use glpk and jq.
 
@@ -46,7 +46,7 @@ c.f. Fortêt, R., Revue Française de Recherche Opérationelle 4,
 pp. 17-26. (1960). It has been [[https://lists.gnu.org/archive/html/help-glpk/2022-01/msg00000.html][created by me and P. Naszvadi]] to be
 included in the examples of the ~glpk~ distribution.)
 
-** Solving on DWave
+** Solving on D-Wave
 
 - Dry run, just echo Q ::
 #+BEGIN_SRC bash
@@ -54,7 +54,7 @@ included in the examples of the ~glpk~ distribution.)
 #+END_SRC
 - Actually solve ::
 *Important*: run int in a ~screen~. It will wait for the process to
- complete. Mostly it runs almost after submitting; DWave may not be
+ complete. Mostly it runs almost after submitting; D-Wave may not be
  busy, but it also may take more time.
 #+BEGIN_SRC bash
 ./solve_QUBO_DWave.py --outfile qubo.dwavepickle qubo.csv
@@ -88,10 +88,25 @@ with all its data.
 ./dwave_solution_to_csv.py --help
 #+END_SRC
 
-** Display all details of the DWave run
+** Display all details of the D-Wave run
 
 #+BEGIN_SRC bash
 ./catpickle_json.py qubo.dwavepickle | jq
+#+END_SRC
+
+** Get timing information from D-Wave solution
+
+To get timing information from a pickled D-Wave result:
+#+BEGIN_SRC bash
+./dwave_timing_info.py qubo.dwavepickle 
+#+END_SRC
+
+The script emits a csv line with a header to STDOUT, containing all
+available timing fileds. It is possible to suppress the header line
+and to select the desired fields individually. Consult the help
+message for further details:
+#+BEGIN_SRC bash
+./dwave_timing_info.py --help
 #+END_SRC
 
 ** p-value estimation

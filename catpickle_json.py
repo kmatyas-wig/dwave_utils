@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import pickle
-import pulp
 import sys
 import morejson as json
 
